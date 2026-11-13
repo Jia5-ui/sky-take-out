@@ -26,6 +26,19 @@ public class AliOssUtil {
      * @param objectName
      * @return
      */
+    //TODO：### 问题
+    //
+    //你现在这段代码：**捕获异常之后只是打印，没有往外抛异常**。
+    //外层 Controller 不知道上传失败，照样拼接 url、返回成功，就是你刚才看到的假成功。
+    //
+    //### 修改目标
+    //
+    //1. 上传失败抛出运行时异常，让全局异常处理器接管，前端收到失败提示
+    //2. 保留原有打印日志（换成日志框架 log，不要 System.out）
+    //3. 保证 ossClient 一定会 shutdown
+    //4. 区分 OSS 业务异常、网络客户端异常
+    
+
     public String upload(byte[] bytes, String objectName) {
 
         // 创建OSSClient实例。

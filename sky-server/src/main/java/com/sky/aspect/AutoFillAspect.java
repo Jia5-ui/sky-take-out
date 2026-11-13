@@ -28,7 +28,7 @@ public class AutoFillAspect {
     @Pointcut("execution(* com.sky.mapper.*.*(..)) && @annotation(com.sky.annotation.AutoFill)")
     public void autoFillPointCut() {}
 
-
+    //TODO：这里旧版本切面只处理**单个 PO 对象**，拿到 List 直接去调用 list.setCreateTime，ArrayList 没有这个方法，直接抛 `NoSuchMethodException`。
     @Before("autoFillPointCut()")
     public void autoFill(JoinPoint joinPoint) throws Exception {
         log.info("进行自动填充");

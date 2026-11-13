@@ -30,6 +30,7 @@
         <jjwt>0.9.1</jjwt>
         <jaxb-api>2.3.1</jaxb-api>
         <poi>3.16</poi>
+<!--        <mybatis-plus.version>3.5.3.2</mybatis-plus.version>-->
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -130,6 +131,12 @@
                 <version>5.7.10</version>
             </dependency>
 
+            <!--MybatisPlus-->
+<!--            <dependency>-->
+<!--                <groupId>com.baomidou</groupId>-->
+<!--                <artifactId>mybatis-plus-boot-starter</artifactId>-->
+<!--                <version>${mybatis-plus.version}</version>-->
+<!--            </dependency>-->
 
         </dependencies>
     </dependencyManagement>
