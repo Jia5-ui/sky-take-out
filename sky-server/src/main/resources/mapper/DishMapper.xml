@@ -8,6 +8,7 @@
         values (#{name}, #{categoryId}, #{price}, #{image}, #{description}, #{status})
     </insert>
 
+
     <select id="queryPage" resultType="com.sky.vo.DishVO">
         select d.*,c.name categoryName from dish d left join category c on d.category_id = c.id
         <where>

@@ -54,10 +54,13 @@ public interface DishMapper {
      */
     @Delete("delete from dish where id = #{id}")
     void deleteById(Long id);
+<<<<<<< HEAD
 
     /**
      * 根据菜品id集合批量删除菜品
      * @param ids
      */
     void deleteByIds(List<Long> ids);
+=======
+>>>>>>> 50ef6cb0d9570a4a7e5c04ad1de63d7680b2326b
 }
