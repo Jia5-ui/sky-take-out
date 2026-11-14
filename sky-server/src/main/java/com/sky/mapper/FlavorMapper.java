@@ -5,6 +5,7 @@ import com.sky.entity.DishFlavor;
 import com.sky.enumeration.OperationType;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -15,8 +16,9 @@ public interface FlavorMapper {
      * 批量保存口味数据
      * @param flavors
      */
-    //TODO:保存口味需要双击
-    @AutoFill(OperationType.INSERT)
+    //TODO:保存口味需要双击,
+    //TODO：用不了AutoFill作用于list
+//    @AutoFill(OperationType.INSERT)
     void insertBatch(List<DishFlavor> flavors);
 
     /**
@@ -32,4 +34,12 @@ public interface FlavorMapper {
      * @param dishIds
      */
     void deleteByDishIds(List<Long> dishIds);
+
+    /**
+     * 根据id查询菜品
+     * @param dishId
+     * @return
+     */
+    @Select("select * from dish_flavor where dish_id = #{dishId}")
+    List<DishFlavor> getByDishId(Long dishId);
 }
