@@ -11,3 +11,8 @@ sky:
     access-key-id: ${ALIYUN_ACCESS_KEY_ID}
     access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET}
     bucket-name: mysky-project01-yijia
+  redis:
+    host: localhost
+    port: 6379
+    password: 527323
+    database: 0
