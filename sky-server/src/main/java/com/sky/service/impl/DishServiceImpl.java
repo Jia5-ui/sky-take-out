@@ -16,18 +16,19 @@ import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.FlavorMapper;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
-import com.sky.service.dishService;
+import com.sky.service.DishService;
 import com.sky.vo.DishVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Service
-public class dishServiceImpl implements dishService {
+public class DishServiceImpl implements DishService {
 
     @Autowired
     private DishMapper dishMapper;
@@ -156,5 +157,29 @@ public class dishServiceImpl implements dishService {
         }
     }
 
+    /**
+     * 条件查询菜品和口味
+     * @param dish
+     * @return
+     */
+    public List<DishVO> listWithFlavor(Dish dish) {
+        List<Dish> dishList = dishMapper.list(dish);
 
+        List<DishVO> dishVOList = new ArrayList<>();
+
+        for (Dish d : dishList) {
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(d,dishVO);
+
+            //根据菜品id查询对应的口味
+            List<DishFlavor> flavors = flavorMapper.getByDishId(d.getId());
+
+            dishVO.setFlavors(flavors);
+            dishVOList.add(dishVO);
+        }
+
+        return dishVOList;
+    }
 }
+
+
