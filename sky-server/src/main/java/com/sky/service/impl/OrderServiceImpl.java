@@ -54,6 +54,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 用户提交订单
+     *
      * @param ordersSubmitDTO
      * @return
      */
@@ -63,7 +64,7 @@ public class OrderServiceImpl implements OrderService {
         //1.处理业务异常（如地址簿为空、购物车为空等）
         //1.1 地址簿为空
         AddressBook addressBook = addressBookMapper.getById(ordersSubmitDTO.getAddressBookId());
-        if (addressBook==null){
+        if (addressBook == null) {
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
 
@@ -73,7 +74,7 @@ public class OrderServiceImpl implements OrderService {
         ShoppingCart shoppingCart = ShoppingCart.builder().userId(userId).build();
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
 
-        if (shoppingCartList==null||shoppingCartList.isEmpty()){
+        if (shoppingCartList == null || shoppingCartList.isEmpty()) {
             throw new AddressBookBusinessException(MessageConstant.SHOPPING_CART_IS_NULL);
         }
 
@@ -170,9 +171,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 发送消息
         Map map = new HashMap<>();
-        map.put("type",1);//1表示来单提醒 2表示客户催单
-        map.put("OrderId",ordersDB.getId());
-        map.put("content","订单号："+ outTradeNo +"已支付，请及时处理");
+        map.put("type", 1);//1表示来单提醒 2表示客户催单
+        map.put("OrderId", ordersDB.getId());
+        map.put("content", "订单号：" + outTradeNo + "已支付，请及时处理");
 
         //转成json并发送
         String jsonString = JSON.toJSONString(map);
@@ -197,16 +198,18 @@ public class OrderServiceImpl implements OrderService {
         List<OrderVO> list = new ArrayList<>();
 
         if (page.getResult() != null && !page.getResult().isEmpty()) {
-            for(Orders order : page.getResult()){{
-                Long orderId = order.getId();
-                List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orderId);
+            for (Orders order : page.getResult()) {
+                {
+                    Long orderId = order.getId();
+                    List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orderId);
 
-                OrderVO orderVO = new OrderVO();
-                BeanUtils.copyProperties(order, orderVO);
-                orderVO.setOrderDetailList(orderDetailList);
+                    OrderVO orderVO = new OrderVO();
+                    BeanUtils.copyProperties(order, orderVO);
+                    orderVO.setOrderDetailList(orderDetailList);
 
-                list.add(orderVO);
-            }}
+                    list.add(orderVO);
+                }
+            }
         }
 
 
@@ -238,14 +241,39 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param orderId
      */
-    public void cancelOrder(Long orderId) {
+    public void cancelOrder(Long orderId) throws Exception {
+        //根据id查询订单
+        Orders ordersDB = orderMapper.getById(orderId);
 
-        Orders orders = orderMapper.getById(orderId);
+        //判断非空
+        if (ordersDB == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        //判断订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+        if (ordersDB.getStatus() > Orders.TO_BE_CONFIRMED){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Orders orders = new Orders();
+        orders.setId(ordersDB.getId());
+
+        //如果是待接单状态，需要退款
+        if (ordersDB.getStatus() == Orders.TO_BE_CONFIRMED) {
+            //调用微信支付接口，申请退款
+            weChatPayUtil.refund(
+                    ordersDB.getNumber(), //商户订单号
+                    ordersDB.getNumber(), //商户退款单号
+                    new BigDecimal(0.01),//退款金额，单位 元
+                    new BigDecimal(0.01));//原订单金额
+
+            orders.setPayStatus(Orders.REFUND);
+        }
 
         orders.setStatus(Orders.CANCELLED);
         orders.setCancelTime(LocalDateTime.now());
         orders.setCancelReason("用户取消订单");
-
+        //动态更新订单状态，只更新状态、取消时间、取消原因
         orderMapper.update(orders);
     }
 
