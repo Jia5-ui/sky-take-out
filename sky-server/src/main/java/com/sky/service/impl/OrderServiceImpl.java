@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -241,6 +242,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param orderId
      */
+    @Transactional
     public void cancelOrder(Long orderId) throws Exception {
         //根据id查询订单
         Orders ordersDB = orderMapper.getById(orderId);
@@ -276,5 +278,34 @@ public class OrderServiceImpl implements OrderService {
         //动态更新订单状态，只更新状态、取消时间、取消原因
         orderMapper.update(orders);
     }
+
+    /**
+     * 再来一单
+     *
+     * @param orderId
+     */
+    public void reSubmitOrder(Long orderId) {
+        //获得用户id
+        Long userId = BaseContext.getCurrentId();
+
+        //先找到当前订单详情
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orderId);
+
+        //将订单详情对象转换为购物车对象
+        List<ShoppingCart> shoppingcarts = orderDetailList.stream().map(orderDetail -> {
+            ShoppingCart shoppingCart = new ShoppingCart();
+
+            //将原订单详情里面的菜品信息重新复制到购物车对象中(除id)
+            BeanUtils.copyProperties(orderDetail, shoppingCart,"id");
+            shoppingCart.setUserId(userId);
+            shoppingCart.setCreateTime(LocalDateTime.now());
+
+            return shoppingCart;
+        }).collect(Collectors.toList());
+        //添加购物车到数据库
+        shoppingCartMapper.insertBatch(shoppingcarts);
+        System.out.println(shoppingcarts);
+    }
+
 
 }

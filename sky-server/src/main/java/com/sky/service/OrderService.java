@@ -50,4 +50,10 @@ public interface OrderService {
      * @param orderId
      */
     void cancelOrder(Long orderId) throws Exception;
+
+    /**
+     * 再来一单
+     * @param orderId
+     */
+    void reSubmitOrder(Long orderId);
 }
