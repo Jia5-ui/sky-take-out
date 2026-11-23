@@ -87,6 +87,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setPhone(addressBook.getPhone());
         orders.setUserId(userId);
         orders.setConsignee(addressBook.getConsignee());
+        orders.setAddress(addressBook.getDetail());
 
         orderMapper.insert(orders);
 
@@ -230,6 +231,22 @@ public class OrderServiceImpl implements OrderService {
         orderVO.setOrderDetailList(orderDetailList);
 
         return orderVO;
+    }
+
+    /**
+     * 取消订单
+     *
+     * @param orderId
+     */
+    public void cancelOrder(Long orderId) {
+
+        Orders orders = orderMapper.getById(orderId);
+
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelTime(LocalDateTime.now());
+        orders.setCancelReason("用户取消订单");
+
+        orderMapper.update(orders);
     }
 
 }
