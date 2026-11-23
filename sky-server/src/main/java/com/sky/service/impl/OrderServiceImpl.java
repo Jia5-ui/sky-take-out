@@ -1,8 +1,13 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
+import com.sky.dto.OrdersDTO;
+import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
@@ -10,10 +15,13 @@ import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.*;
 
 import com.sky.dto.OrdersSubmitDTO;
+import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -38,6 +48,9 @@ public class OrderServiceImpl implements OrderService {
     private UserMapper userMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     /**
      * 用户提交订单
@@ -152,6 +165,71 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+
+
+        // 发送消息
+        Map map = new HashMap<>();
+        map.put("type",1);//1表示来单提醒 2表示客户催单
+        map.put("OrderId",ordersDB.getId());
+        map.put("content","订单号："+ outTradeNo +"已支付，请及时处理");
+
+        //转成json并发送
+        String jsonString = JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(jsonString);
+    }
+
+    /**
+     * 查询历史订单
+     *
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    public PageResult pageQueryForUser(OrdersPageQueryDTO ordersPageQueryDTO) {
+        Long userId = BaseContext.getCurrentId();
+
+        ordersPageQueryDTO.setUserId(userId);
+
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+        //状态为5已完成 6已取消 7退款的
+        Page<Orders> page = orderMapper.list(ordersPageQueryDTO);
+
+        List<OrderVO> list = new ArrayList<>();
+
+        if (page.getResult() != null && !page.getResult().isEmpty()) {
+            for(Orders order : page.getResult()){{
+                Long orderId = order.getId();
+                List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orderId);
+
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(order, orderVO);
+                orderVO.setOrderDetailList(orderDetailList);
+
+                list.add(orderVO);
+            }}
+        }
+
+
+        return new PageResult(page.getTotal(), list);
+    }
+
+    /**
+     * 根据id查询订单详情
+     *
+     * @param orderId
+     * @return
+     */
+    public OrderVO getOrdersAndDetail(Long orderId) {
+        Long userId = BaseContext.getCurrentId();
+
+        Orders orders = orderMapper.getById(orderId);
+
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orderId);
+
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(orders, orderVO);
+        orderVO.setOrderDetailList(orderDetailList);
+
+        return orderVO;
     }
 
 }
