@@ -56,4 +56,11 @@ public interface OrderService {
      * @param orderId
      */
     void reSubmitOrder(Long orderId);
+
+    /**
+     * 管理端订单搜索
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 }
