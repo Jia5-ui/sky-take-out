@@ -92,4 +92,10 @@ public interface OrderService {
      * @param orderId
      */
     void delivery(Long orderId);
+
+    /**
+     * 完成订单
+     * @param id
+     */
+    void complete(Long id);
 }
