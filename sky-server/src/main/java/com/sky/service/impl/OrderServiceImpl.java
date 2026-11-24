@@ -19,6 +19,7 @@ import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
+import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import com.sky.websocket.WebSocketServer;
@@ -255,7 +256,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         //判断订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
-        if (ordersDB.getStatus() > Orders.TO_BE_CONFIRMED){
+        if (ordersDB.getStatus() > Orders.TO_BE_CONFIRMED) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
@@ -298,7 +299,7 @@ public class OrderServiceImpl implements OrderService {
             ShoppingCart shoppingCart = new ShoppingCart();
 
             //将原订单详情里面的菜品信息重新复制到购物车对象中(除id)
-            BeanUtils.copyProperties(orderDetail, shoppingCart,"id");
+            BeanUtils.copyProperties(orderDetail, shoppingCart, "id");
             shoppingCart.setUserId(userId);
             shoppingCart.setCreateTime(LocalDateTime.now());
 
@@ -359,12 +360,13 @@ public class OrderServiceImpl implements OrderService {
 
         return new PageResult(page.getTotal(), orderVOList);
     }
+
     // 将Orders转化为OrderVO
     private List<OrderVO> getOrderVOList(Page<Orders> page) {
         List<Orders> ordersList = page.getResult();
 
         List<OrderVO> orderVOList = new ArrayList<>();
-        if (!Collections.isEmpty(ordersList)){
+        if (!Collections.isEmpty(ordersList)) {
             for (Orders orders : ordersList) {
                 //将共同字段复制到OrderVO
                 OrderVO orderVO = new OrderVO();
@@ -380,12 +382,13 @@ public class OrderServiceImpl implements OrderService {
         }
         return orderVOList;
     }
+
     //根据id获取订单菜品字符串
     private String getOrderDishesStr(Orders orders) {
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
 
         // 将每一条订单菜品信息拼接为字符串（格式：宫保鸡丁*3；）
-        if(!CollectionUtils.isEmpty(orderDetailList)){
+        if (!CollectionUtils.isEmpty(orderDetailList)) {
             String res = orderDetailList.stream().map(x -> {
                 String dish = x.getName() + "*" + x.getNumber();
                 return dish;
@@ -397,6 +400,61 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
+    /**
+     * 订单统计方案一：使用 group by
+     *
+     * @return
+     */
+    //TODO:高并发情况测试
+//    public OrderStatisticsVO statistics() {
+//        List<Map<String, Object>> orderStatistics = orderMapper.getCountGroupByStatus();
+////        group by 特点：**没有数据的状态，不会返回这条 map**，需要手动设置
+//        OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
+//        orderStatisticsVO.setToBeConfirmed(0);
+//        orderStatisticsVO.setConfirmed(0);
+//        orderStatisticsVO.setDeliveryInProgress(0);
+//
+//        if (!CollectionUtils.isEmpty(orderStatistics)) {
+//            for (Map<String, Object> map : orderStatistics) {
+//                Integer status = (Integer) map.get("status");
+//                Integer count = 0;
+//                if (status != null) {
+//                    Long countLong = (Long) map.get("count");
+//                    count = countLong.intValue();
+//                }
+//
+//                //包装类不能用 == 判断,大于 127 会新建对象，== 比较地址，会匹配失败。
+//                if (Orders.TO_BE_CONFIRMED.equals(status)) {
+//                    orderStatisticsVO.setToBeConfirmed(count);
+//                } else if (Orders.CONFIRMED.equals(status)) {
+//                    orderStatisticsVO.setConfirmed(count);
+//                } else if (Orders.DELIVERY_IN_PROGRESS.equals(status)) {
+//                    orderStatisticsVO.setDeliveryInProgress(count);
+//                }
+//            }
+//        }
+//
+//        return orderStatisticsVO;
+//    }
 
+    /**
+     * 订单统计方案二：分别查询
+     *
+     * @return
+     */
+    //TODO:高并发情况测试
+    public OrderStatisticsVO statistics() {
+        // 根据状态，分别查询出待接单、待派送、派送中的订单数量
+        Integer toBeConfirmed = orderMapper.countStatus(Orders.TO_BE_CONFIRMED);
+        Integer confirmed = orderMapper.countStatus(Orders.CONFIRMED);
+        Integer deliveryInProgress = orderMapper.countStatus(Orders.DELIVERY_IN_PROGRESS);
+
+        // 将查询出的数据封装到orderStatisticsVO中响应
+        OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
+        orderStatisticsVO.setToBeConfirmed(toBeConfirmed);
+        orderStatisticsVO.setConfirmed(confirmed);
+        orderStatisticsVO.setDeliveryInProgress(deliveryInProgress);
+        return orderStatisticsVO;
+    }
 
 }
