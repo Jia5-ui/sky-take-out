@@ -6,15 +6,12 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersDTO;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.*;
 
-import com.sky.dto.OrdersSubmitDTO;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
@@ -455,6 +452,27 @@ public class OrderServiceImpl implements OrderService {
         orderStatisticsVO.setConfirmed(confirmed);
         orderStatisticsVO.setDeliveryInProgress(deliveryInProgress);
         return orderStatisticsVO;
+    }
+
+    /**
+     * 接单
+     *
+     * @param ordersConfirmDTO
+     */
+    public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
+        //方式一
+//        ordersConfirmDTO.setStatus(Orders.CONFIRMED);
+//
+//        Orders orders = new Orders();
+//        BeanUtils.copyProperties(ordersConfirmDTO, orders);
+//        orderMapper.update(orders);
+
+        //方式二
+        Orders orders = Orders.builder()
+                .id(ordersConfirmDTO.getId())
+                .status(Orders.CONFIRMED)
+                .build();
+        orderMapper.update(orders);
     }
 
 }
