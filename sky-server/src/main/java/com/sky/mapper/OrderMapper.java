@@ -73,4 +73,11 @@ public interface OrderMapper {
      */
     @Select("select count(id) from orders where status = #{status}")
     Integer countStatus(Integer status);
+
+    /**
+     * 根据条件查询营业额
+     * @param map
+     * @return
+     */
+    Double getTurnoverByMap(Map map);
 }
