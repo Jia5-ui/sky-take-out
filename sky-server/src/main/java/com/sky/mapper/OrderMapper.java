@@ -1,6 +1,7 @@
 package com.sky.mapper;
 
 import com.github.pagehelper.Page;
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import com.sky.result.Result;
@@ -11,6 +12,7 @@ import org.apache.ibatis.annotations.Select;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -88,4 +90,20 @@ public interface OrderMapper {
      * @return
      */
     Integer getOrderCountByMap(Map map);
+
+    /**
+     * 查询top10
+     * @param begin
+     * @param end
+     * @return
+     */
+    List<Map<String, Object>> getTop10(LocalDateTime begin, LocalDateTime end);
+
+    /**
+     * 查询top10方法二
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+    List<GoodsSalesDTO> getTop10ByGoodsSalesDTO(LocalDateTime beginTime, LocalDateTime endTime);
 }
