@@ -66,4 +66,11 @@ public interface SetmealMapper {
 
     @Select("select count(*) from setmeal where category_id = #{id}")
     Integer countByCategoryId(Long id);
+
+    /**
+     * 根据map集合中的条件进行查询
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
 }
