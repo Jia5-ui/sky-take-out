@@ -82,4 +82,10 @@ public interface OrderMapper {
     Double getTurnoverByMap(Map map);
 
 
+    /**
+     * 根据条件查询订单数量
+     * @param map
+     * @return
+     */
+    Integer getOrderCountByMap(Map map);
 }
